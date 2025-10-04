@@ -5,7 +5,6 @@ from utils import RadarAnalyzer
 st.set_page_config(page_title="RADAR News Analyzer", layout="wide")
 st.title("📰 RADAR - Выявление горячих финансовых новостей")
 
-
 with st.form("event_form"):
     headline = st.text_input(
         "📝 Заголовок события (headline)",
@@ -43,21 +42,28 @@ with st.form("event_form"):
         help="Идентификатор кластера дубликатов/перепечаток"
     )
 
+    hotness = st.slider(
+        "🔥 Выставьте оценку горячести (hotness ∈ [0,1])",
+        0.0, 1.0, 0.5,
+        help="Перетащите ползунок, чтобы указать, насколько событие горячее"
+    )
+
     submit = st.form_submit_button("✅ Сгенерировать черновик")
 
-
 if submit:
-    # Формируем словарь события
+
     sample_event = {
         "headline": headline,
         "why_now": why_now,
         "entities": [e.strip() for e in entities.split(",") if e.strip()],
         "sources": [s.strip() for s in sources.splitlines() if s.strip()],
         "timeline": [t.strip() for t in timeline.splitlines() if t.strip()],
-        "dedup_group": dedup_group
+        "dedup_group": dedup_group,
+        "hotness": hotness  # <--- значение слайдера
     }
 
     analyzer = RadarAnalyzer()
+
 
     with st.spinner("Получаем факты и источники..."):
         try:
@@ -66,7 +72,6 @@ if submit:
             st.text(facts)
         except Exception as e:
             st.error(f"Ошибка при получении фактов: {e}")
-
 
 
     with st.spinner("Генерируем черновик поста..."):
@@ -78,16 +83,5 @@ if submit:
             st.error(f"Ошибка при генерации черновика: {e}")
 
 
-    with st.spinner("Оцениваем горячесть события..."):
-        try:
-            hotness = analyzer.evaluate_hotness(sample_event)
-            sample_event["hotness"] = hotness
-            st.metric("🔥 Горячесть новости", hotness)
-        except Exception as e:
-            st.error(f"Ошибка при оценке горячести: {e}")
-
-    # -------------------------------
-    # 4️⃣ Отображаем итоговое событие
-    # -------------------------------
-    st.subheader("📌 Исходное событие (с горячестью)")
+    st.subheader("📌 Исходное событие (с выбранной горячестью)")
     st.json(sample_event)
