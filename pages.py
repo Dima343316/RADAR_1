@@ -43,25 +43,18 @@ with st.form("event_form"):
         help="Идентификатор кластера дубликатов/перепечаток"
     )
 
-    hotness = st.slider(
-        "🔥 Оценка горячести (hotness ∈ [0,1])",
-        0.0, 1.0, 0.5,
-        help="Оценка, насколько событие горячее, влияет на рынки и активы"
-    )
-
     submit = st.form_submit_button("✅ Сгенерировать черновик")
 
 
 if submit:
-
+    # Формируем словарь события
     sample_event = {
         "headline": headline,
         "why_now": why_now,
         "entities": [e.strip() for e in entities.split(",") if e.strip()],
         "sources": [s.strip() for s in sources.splitlines() if s.strip()],
         "timeline": [t.strip() for t in timeline.splitlines() if t.strip()],
-        "dedup_group": dedup_group,
-        "hotness": hotness
+        "dedup_group": dedup_group
     }
 
     analyzer = RadarAnalyzer()
@@ -74,6 +67,8 @@ if submit:
         except Exception as e:
             st.error(f"Ошибка при получении фактов: {e}")
 
+
+
     with st.spinner("Генерируем черновик поста..."):
         try:
             draft = analyzer.generate_draft(sample_event)
@@ -83,5 +78,16 @@ if submit:
             st.error(f"Ошибка при генерации черновика: {e}")
 
 
+    with st.spinner("Оцениваем горячесть события..."):
+        try:
+            hotness = analyzer.evaluate_hotness(sample_event)
+            sample_event["hotness"] = hotness
+            st.metric("🔥 Горячесть новости", hotness)
+        except Exception as e:
+            st.error(f"Ошибка при оценке горячести: {e}")
+
+    # -------------------------------
+    # 4️⃣ Отображаем итоговое событие
+    # -------------------------------
     st.subheader("📌 Исходное событие (с горячестью)")
     st.json(sample_event)
