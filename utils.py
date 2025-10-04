@@ -123,10 +123,9 @@ if __name__ == "__main__":
 
     analyzer = RadarAnalyzer()
 
-    # 1️⃣ Получаем факты
+
     analyzer.fetch_event_sources(headline)
 
-    # 2️⃣ Формируем событие
     sample_event = {
         "headline": headline,
         "hotness": 0.88,
@@ -140,8 +139,8 @@ if __name__ == "__main__":
         "dedup_group": "cb_tax_inflation_20251030"
     }
 
-    # 3️⃣ Генерируем черновик
+
     analyzer.generate_draft(sample_event)
 
-    # 4️⃣ Выводим всё красиво
+
     analyzer.display()
